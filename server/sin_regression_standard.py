@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from worker import Network
+from network_elements import Network
 
 ## set up network
 print("假如跑崩了，再跑一次就好了。")
