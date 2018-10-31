@@ -1,5 +1,5 @@
 import numpy as np
-from network_elements import *
+from network_elements import Network
 from jsocket import *
 from socket import *
 
@@ -26,11 +26,22 @@ class ParameterServer:
             x_train = np.array(data["x_train"])
             y_train = np.array(data["y_train"])
             epoch = data["epoch"]
+            network = Network(net_config)
             print("net config: " , net_config)
             print("epoch: ", epoch)
             print("x_train", x_train)
             print("y_train", y_train)
 
+            ## send weights and biases
+            print("send weights and biases, training is over!!!")
+            weights = network.get_weights()
+            biases = network.get_biases()
+            weights = [weight.tolist() for weight in weights]
+            biases = [bias.tolist() for bias in biases]
+
+            data = {"weights" : weights, "biases": biases}
+            tcpclientsocket.send(data)
+            tcpclientsocket.close()
 
 
     def communicate_with_worker(self):

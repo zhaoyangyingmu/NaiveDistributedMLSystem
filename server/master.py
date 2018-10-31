@@ -43,6 +43,9 @@ class Master:
                 container = Container(network)
                 test_before = container.test(x_test, y_test)
 
+                ## start training
+                container.train(x_train, y_train, 50)
+
                 test_after = container.test(x_test, y_test)
                 data = {"test_before": test_before, "test_after": test_after}
                 tcpclientsocket.send(data)
@@ -64,44 +67,6 @@ class Master:
                     print("predict_admission", predict_admission)
                     data = {"predict_admission": predict_admission}
                     tcpclientsocket.send(data)
-                break
-
-                ## begin training
-                # try:
-                tcpclientsocket.send("Training...".encode())
-                container.train(x_train, y_train, 50)
-                # except ValueError as e:
-                #     print("Training failed, please try all again!")
-                #     tcpclientsocket.send("You have put in wrong net config, please tr"
-                #                          "y again! \nType in try again!\n".encode())
-                #     continue
-                # except Exception as e:
-                #     print("Training failed, please try all again!")
-                #     tcpclientsocket.send("You have put in wrong net config, please tr"
-                #                          "y again! \nType in try again!\n".encode())
-                #     continue
-
-                tcpclientsocket.send("Testing...".encode())
-                loss = container.test(x_test, y_test)
-                print("Test loss: " + str(loss))
-                tcpclientsocket.send(("Test loss: " + str(loss) + "\n").encode())
-                tcpclientsocket.send("type in gre,gpa,rank: ".encode())
-
-                ## predict
-                while True:
-                    data = tcpclientsocket.recv(1024)
-                    if not data:
-                        continue
-                    if data.decode() == "exit":
-                        break
-                    x_input = (data.decode()).split(",")
-                    print("predict input: " , x_input)
-                    x_input = [float(num) for num in x_input]
-                    x_input = [x_input[i] / data_range[i] for i in range(len(x_input))]
-                    y_predit = container.predict(x_input)
-                    tcpclientsocket.send(("prediction for admission: "
-                                          "" + str(y_predit[0,1]) + "\ntype in gre,gpa,rank: ").encode())
-                    print("prediction for admission: " + str(y_predit[0,1]))
                 break
             tcpclientsocket.close()
         server_socket.close()
@@ -180,19 +145,25 @@ class Container:
     def __init__(self, network):
         self.network = network
 
-    def train(self, x_train, y_train, num_train):
+    def train(self, x_train, y_train, epoch):
         HOST = '127.0.0.1'
         PORT = 6666
 
         clientsocket = Jsocket(AF_INET, SOCK_STREAM)
         clientsocket.connect((HOST, PORT))
         data = {"net_config": self.network.get_net_config(), "x_train": x_train.tolist(),
-                "y_train": y_train.tolist(), "epoch": num_train}
+                "y_train": y_train.tolist(), "epoch": epoch}
         clientsocket.send(data)
         print("Training...")
-        for e in range(num_train):
-            loss = self.network.train(x_train, y_train)
-            print("epoch " + str(e) + ", train loss: " + str(loss))
+        data = clientsocket.recv()
+        weights = data["weights"]
+        weights = [np.array(weight) for weight in weights]
+        biases = data["biases"]
+        biases = [np.array(bias) for bias in biases]
+        self.network.set_weights(weights)
+        self.network.set_biases(biases)
+        print("get weights and biases, trainning is over!!!")
+        clientsocket.close()
 
     def test(self, x_test, y_test):
         print("Testing...")
