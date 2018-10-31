@@ -1,6 +1,6 @@
 '''创建客户端程序，向服务器传递数据'''
  
-from util.jsocket import *
+from util.jsonsocket import *
 from socket import *
 
 
@@ -14,7 +14,7 @@ def client():
     HOST = '127.0.0.1'
     PORT = 10521
  
-    clientsocket = Jsocket(AF_INET,SOCK_STREAM)
+    clientsocket = JsonSocket(AF_INET,SOCK_STREAM)
     clientsocket.connect((HOST,PORT))
     while True:
         ## send net config and file path

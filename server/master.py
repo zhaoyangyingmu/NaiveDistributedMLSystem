@@ -4,7 +4,7 @@ from socket import *
 import numpy as np
 from util.network_elements import *
 import json
-from util.jsocket import Jsocket
+from util.jsonsocket import JsonSocket
 
 
 class Master:
@@ -15,7 +15,7 @@ class Master:
 
     def start(self):
         ADDR = (self.HOST, self.PORT)
-        server_socket = Jsocket(AF_INET, SOCK_STREAM)
+        server_socket = JsonSocket(AF_INET, SOCK_STREAM)
         server_socket.bind(ADDR)
         server_socket.listen(self.listen_num)
         while True:
@@ -121,23 +121,6 @@ class Master:
 
         return [x_train, y_train, x_test, y_test,data_range]
 
-    @staticmethod
-    def get_net_config(tcpclientsocket):
-        while True:
-            tcpclientsocket.send("type in the net config for network (for example 3,30,1,2,-1): ".encode())
-            data = tcpclientsocket.recv(1024)
-            if not data:
-                continue
-            data = data.decode()
-            data = data.strip("[]")
-            data = data.split(",")
-            try:
-                net_config = [int(i) for i in data]
-            except ValueError:
-                continue
-            break
-        return net_config
-
 
 ## This is a container contains both parameter server and worker
 ## It is responsible for training, testing and prediction
@@ -149,7 +132,7 @@ class Container:
         HOST = '127.0.0.1'
         PORT = 6666
 
-        clientsocket = Jsocket(AF_INET, SOCK_STREAM)
+        clientsocket = JsonSocket(AF_INET, SOCK_STREAM)
         clientsocket.connect((HOST, PORT))
         data = {"net_config": self.network.get_net_config(), "x_train": x_train.tolist(),
                 "y_train": y_train.tolist(), "epoch": epoch}

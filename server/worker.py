@@ -1,6 +1,6 @@
 import numpy as np
 from util.network_elements import Network
-from util.jsocket import *
+from util.jsonsocket import *
 from socket import *
 
 
@@ -12,7 +12,7 @@ class Worker:
 
     def start(self):
         ADDR = (self.HOST, self.PORT)
-        server_socket = Jsocket(AF_INET, SOCK_STREAM)
+        server_socket = JsonSocket(AF_INET, SOCK_STREAM)
         server_socket.bind(ADDR)
         server_socket.listen(self.listen_num)
         while True:
