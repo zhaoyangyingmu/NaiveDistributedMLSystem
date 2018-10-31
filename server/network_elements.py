@@ -219,3 +219,5 @@ class Network:
             bias_i = bias_i + 1
             layer_i = layer_i + 2
 
+    def get_net_config(self):
+        return self.net_config

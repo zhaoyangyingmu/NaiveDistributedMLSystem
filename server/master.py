@@ -7,7 +7,7 @@ import json
 from jsocket import Jsocket
 
 
-class Sever:
+class Master:
     def __init__(self, HOST, PORT, listen_num):
         self.HOST = HOST
         self.PORT = PORT
@@ -30,7 +30,6 @@ class Sever:
                 while True:
                     ## initialize network first
                     net_config = self.get_net_config(tcpclientsocket)
-                    self.start_parameter(net_config)
 
                     learning_rate = 0.1
                     try:
@@ -49,19 +48,19 @@ class Sever:
                 container = Container(network)
 
                 ## begin training
-                try:
-                    tcpclientsocket.send("Training...".encode())
-                    container.train(x_train, y_train, 50)
-                except ValueError as e:
-                    print("Training failed, please try all again!")
-                    tcpclientsocket.send("You have put in wrong net config, please tr"
-                                         "y again! \nType in try again!\n".encode())
-                    continue
-                except Exception as e:
-                    print("Training failed, please try all again!")
-                    tcpclientsocket.send("You have put in wrong net config, please tr"
-                                         "y again! \nType in try again!\n".encode())
-                    continue
+                # try:
+                tcpclientsocket.send("Training...".encode())
+                container.train(x_train, y_train, 50)
+                # except ValueError as e:
+                #     print("Training failed, please try all again!")
+                #     tcpclientsocket.send("You have put in wrong net config, please tr"
+                #                          "y again! \nType in try again!\n".encode())
+                #     continue
+                # except Exception as e:
+                #     print("Training failed, please try all again!")
+                #     tcpclientsocket.send("You have put in wrong net config, please tr"
+                #                          "y again! \nType in try again!\n".encode())
+                #     continue
 
                 tcpclientsocket.send("Testing...".encode())
                 loss = container.test(x_test, y_test)
@@ -172,19 +171,6 @@ class Sever:
             break
         return [x_train, y_train, x_test, y_test, data_range]
 
-    def start_parameter(self, net_config):
-        parameter = {"net_config": net_config}
-        para_json = json.dumps(parameter)
-        HOST = '127.0.0.1'
-        PORT = 6666
-
-        clientsocket = socket(AF_INET, SOCK_STREAM)
-        clientsocket.connect((HOST, PORT))
-        while True:
-            clientsocket.send(para_json.encode())
-            print(para_json)
-            break
-
 
 ## This is a container contains both parameter server and worker
 ## It is responsible for training, testing and prediction
@@ -193,6 +179,14 @@ class Container:
         self.network = network
 
     def train(self, x_train, y_train, num_train):
+        HOST = '127.0.0.1'
+        PORT = 6666
+
+        clientsocket = Jsocket(AF_INET, SOCK_STREAM)
+        clientsocket.connect((HOST, PORT))
+        data = {"net_config": self.network.get_net_config(), "x_train": x_train.tolist(),
+                "y_train": y_train.tolist(), "epoch": num_train}
+        clientsocket.send(data)
         print("Training...")
         for e in range(num_train):
             loss = self.network.train(x_train, y_train)
@@ -208,5 +202,5 @@ class Container:
         return self.network.predict(x_input)
 
 
-sever = Sever('', 10521, 5)
+sever = Master('', 10521, 5)
 sever.start()

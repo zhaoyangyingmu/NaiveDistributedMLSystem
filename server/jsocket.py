@@ -33,9 +33,8 @@ class Jsocket(socket.socket):
             left_size = data_size - recv_size
             data_recv = b''
             if data_size - recv_size > 1024:
-                
                 left_size = 1024
-            
+
             data_recv = super(Jsocket, self).recv(left_size)
             recv_size += left_size
             total_data += data_recv
