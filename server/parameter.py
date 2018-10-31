@@ -1,6 +1,6 @@
 import numpy as np
-from network_elements import Network
-from jsocket import *
+from util.network_elements import Network
+from util.jsocket import *
 from socket import *
 
 
@@ -85,5 +85,3 @@ class ParameterServer:
         clientsocket.close()
 
 
-parameter_server = ParameterServer('', 6666, 5)
-parameter_server.start()

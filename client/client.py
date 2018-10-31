@@ -1,6 +1,6 @@
 '''创建客户端程序，向服务器传递数据'''
  
-from jsocket import *
+from util.jsocket import *
 from socket import *
 
 
@@ -19,7 +19,7 @@ def client():
     while True:
         ## send net config and file path
         net_config = [3,1,1,2,-1]
-        file_path = "..//data//student_data.csv"
+        file_path = ".//data//student_data.csv"
 
         data = {"net_config": net_config, "file_path" : file_path}
         clientsocket.send(data)
@@ -42,5 +42,3 @@ def client():
             print("predict admission: ", predict_admission)
         break
 
-
-client()

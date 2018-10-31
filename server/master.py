@@ -2,9 +2,9 @@
  
 from socket import *
 import numpy as np
-from network_elements import *
+from util.network_elements import *
 import json
-from jsocket import Jsocket
+from util.jsocket import Jsocket
 
 
 class Master:
@@ -44,7 +44,7 @@ class Master:
                 test_before = container.test(x_test, y_test)
 
                 ## start training
-                container.train(x_train, y_train, 5000)
+                container.train(x_train, y_train, 500)
 
                 test_after = container.test(x_test, y_test)
                 data = {"test_before": test_before, "test_after": test_after}
@@ -107,11 +107,11 @@ class Master:
             data_range.append(column_max-column_min)
             datas[:, i] = datas[:, i] * 1.0 / (column_max - column_min)
 
-        np.save("..//data//tags.npy", tags)
-        np.save("..//data//datas.npy", datas)
+        np.save(".//data//tags.npy", tags)
+        np.save(".//data//datas.npy", datas)
 
-        tags = np.load("..//data//tags.npy")
-        datas = np.load("..//data//datas.npy")
+        tags = np.load(".//data//tags.npy")
+        datas = np.load(".//data//datas.npy")
         m = tags.shape[0]
         train_idx = int(m * 0.8)
         x_train = datas[:train_idx, :]
@@ -174,6 +174,3 @@ class Container:
     def predict(self, x_input):
         return self.network.predict(x_input)
 
-
-sever = Master('', 10521, 5)
-sever.start()

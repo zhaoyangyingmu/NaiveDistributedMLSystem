@@ -1,6 +1,6 @@
 import numpy as np
-from network_elements import Network
-from jsocket import *
+from util.network_elements import Network
+from util.jsocket import *
 from socket import *
 
 
@@ -53,6 +53,3 @@ class Worker:
                     tcpclientsocket.send(data)
             tcpclientsocket.close()
 
-
-worker = Worker('', 5555, 5)
-worker.start()
