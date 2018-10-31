@@ -18,7 +18,7 @@ def client():
     clientsocket.connect((HOST,PORT))
     while True:
         ## send net config and file path
-        net_config = [3,30,1,2,-1]
+        net_config = [3,1,1,2,-1]
         file_path = "..//data//student_data.csv"
 
         data = {"net_config": net_config, "file_path" : file_path}

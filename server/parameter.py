@@ -29,8 +29,9 @@ class ParameterServer:
             network = Network(net_config)
             print("net config: " , net_config)
             print("epoch: ", epoch)
-            print("x_train", x_train)
-            print("y_train", y_train)
+
+            ## communicate with worker
+            self.communicate_with_worker(network, x_train, y_train, epoch)
 
             ## send weights and biases
             print("send weights and biases, training is over!!!")
@@ -44,8 +45,44 @@ class ParameterServer:
             tcpclientsocket.close()
 
 
-    def communicate_with_worker(self):
-        pass
+    def communicate_with_worker(self, network, x_train, y_train, epoch):
+        HOST = '127.0.0.1'
+        PORT = 5555
+
+        clientsocket = Jsocket(AF_INET, SOCK_STREAM)
+        clientsocket.connect((HOST, PORT))
+        net_config = network.get_net_config()
+        x_train = x_train.tolist()
+        data = {"net_config": net_config, "x_train": x_train, "epoch": epoch}
+        clientsocket.send(data)
+
+        data = clientsocket.recv()
+        print(data["mes"])
+
+        x_train = np.array(x_train)
+        y_train = np.array(y_train)
+        for e in range(epoch):
+            print("----------------------------------------------------------------------")
+            print("epoch", e)
+            batch_size = 10
+            for i in range(int(x_train.shape[0]/batch_size)):
+                weights = network.get_weights()
+                biases = network.get_biases()
+                weights = [weight.tolist() for weight in weights]
+                biases = [bias.tolist() for bias in biases]
+                data = {"weights": weights, "biases": biases}
+                clientsocket.send(data)
+                print("send data")
+                print(data)
+
+                data = clientsocket.recv()
+                print("receive data")
+                print(data)
+                layer_activations = data["layer_activations"]
+                layer_activations = [np.array(layer_activation) for layer_activation in layer_activations]
+                network.train(x_train[i:i+10, :],y_train[i:i+10, :],layer_activations)
+            ## print("layer_activations[0]", layer_activations[0])
+        clientsocket.close()
 
 
 parameter_server = ParameterServer('', 6666, 5)

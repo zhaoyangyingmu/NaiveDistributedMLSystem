@@ -40,6 +40,7 @@ class Jsocket(socket.socket):
             total_data += data_recv
 
         recvJson = total_data.decode('utf-8')
+        # print(recvJson)
         return json.loads(recvJson)
 
     def send(self, sendDict):

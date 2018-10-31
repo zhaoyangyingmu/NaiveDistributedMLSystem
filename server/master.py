@@ -44,7 +44,7 @@ class Master:
                 test_before = container.test(x_test, y_test)
 
                 ## start training
-                container.train(x_train, y_train, 50)
+                container.train(x_train, y_train, 5000)
 
                 test_after = container.test(x_test, y_test)
                 data = {"test_before": test_before, "test_after": test_after}
