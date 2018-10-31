@@ -15,7 +15,7 @@ class Master:
 
     def start(self):
         ADDR = (self.HOST, self.PORT)
-        server_socket = socket(AF_INET, SOCK_STREAM)
+        server_socket = Jsocket(AF_INET, SOCK_STREAM)
         server_socket.bind(ADDR)
         server_socket.listen(self.listen_num)
         while True:
@@ -25,27 +25,46 @@ class Master:
 
             ##one process
             while True:
-                ## get net config
-                network = []
-                while True:
-                    ## initialize network first
-                    net_config = self.get_net_config(tcpclientsocket)
+                ## get net config and file path
+                data = tcpclientsocket.recv()
+                net_config = data["net_config"]
+                file_path = data["file_path"]
+                print("data received:")
+                print("net config: ", net_config)
+                print("file path: ", file_path)
 
-                    learning_rate = 0.1
-                    try:
-                        network = Network(net_config, learning_rate)
-                    except IndexError as e:
-                        continue
-                    except Exception as e:
-                        continue
-                    break
-
+                network = Network(net_config)
 
                 ## get train file
-                [x_train, y_train, x_test, y_test, data_range] = self.get_all_data(tcpclientsocket)
+                [x_train, y_train, x_test, y_test, data_range] = self.read_file(file_path)
+                print("training data ready!")
 
                 ## get a container
                 container = Container(network)
+                test_before = container.test(x_test, y_test)
+
+                test_after = container.test(x_test, y_test)
+                data = {"test_before": test_before, "test_after": test_after}
+                tcpclientsocket.send(data)
+
+                ## receive x_input and send output
+                while True:
+                    data = tcpclientsocket.recv()
+                    if data["close"]:
+                        tcpclientsocket.close()
+                        break
+                    x_input = data["x_input"]
+                    print("data received: ")
+                    print("x_input: " , x_input)
+                    x_input = x_input.split(',')
+                    x_input = [float(num) for num in x_input]
+                    x_input = [x_input[i] / data_range[i] for i in range(len(x_input))]
+
+                    predict_admission = (container.predict(x_input))[0,1]
+                    print("predict_admission", predict_admission)
+                    data = {"predict_admission": predict_admission}
+                    tcpclientsocket.send(data)
+                break
 
                 ## begin training
                 # try:
@@ -153,23 +172,6 @@ class Master:
                 continue
             break
         return net_config
-
-    def get_all_data(self, tcpclientsocket):
-        while True:
-            tcpclientsocket.send("type in the file path for training this network "
-                                 "(for example: ..//data//student_data.csv): ".encode())
-            data = tcpclientsocket.recv(1024)
-            if not data:
-                continue
-            file_path = data.decode()
-            try:
-                [x_train, y_train, x_test, y_test, data_range] = self.read_file(file_path)
-            except FileNotFoundError as e:
-                continue
-            except PermissionError as e:
-                continue
-            break
-        return [x_train, y_train, x_test, y_test, data_range]
 
 
 ## This is a container contains both parameter server and worker
